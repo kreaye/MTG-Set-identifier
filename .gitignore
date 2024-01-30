@@ -1,3 +1,7 @@
+#Project files
+bulk_card_list.json
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

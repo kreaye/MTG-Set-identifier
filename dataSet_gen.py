@@ -4,6 +4,10 @@ import json
 import requests
 import os
 
+# need to add check for if file alread exists
+# need to add checks and creating folder
+#
+
 """
     Load data from a JSON file.
 
@@ -14,7 +18,7 @@ import os
     - dict: The data as a dictionary.
 """
 def load_data_from_json(file_path):
-    with open(file_path, 'r') as file:
+    with open(file_path, 'r', encoding='utf-8') as file:
         data = json.load(file)
     return data
 
@@ -47,6 +51,35 @@ def get_scryfall_bulkdata_url(url):
         print(f"Error downloading bulk data: {e}")
 
 """
+    Runs through list of cards and download images of relivent cards    
+
+    Parameters:
+    - output_folder (str): The name of the location where images are stored.
+    - cardlist (str): name of json file containing the list of cards
+    -filter_data (dic): dic of layout types for filtering
+"""
+def get_cardimages(output_folder, cardlist, filter_data):
+
+    clist = load_data_from_json(cardlist) 
+
+    for card in clist:
+        if filter_data[card["layout"]]:
+            file = output_folder + "(" + card["set_id"] + ")_"+card["id"] + ".jpg"
+            match(card["layout"]):
+                case "normal" | "adventure" | "leveler" | "prototype" | "mutate":
+                    download_file(card["image_uris"]["normal"], file)
+                case "modal_dfc":
+                    print(file)
+                    download_file(card["card_faces"][0]["image_uris"]["normal"], file)
+                    download_file(card["card_faces"][1]["image_uris"]["normal"], file)
+                case _:
+                    print("something went very wrong")
+        else:
+            None
+
+
+
+"""
     Download a file from a URL and save it to the specified file name.
 
     Parameters:
@@ -64,7 +97,7 @@ def download_file(url, file_name):
         with open(file_name, "wb") as file:
             file.write(response.content)
 
-        print(f"Downloaded: {file_name}")
+        #print(f"Downloaded: {file_name}")
 
     except requests.exceptions.RequestException as e:
         print(f"Error downloading file from {url}: {e}")
@@ -83,13 +116,11 @@ def main():
     bulkdata_uri = get_scryfall_bulkdata_url(scryfall_url)
     download_file(bulkdata_uri, "bulk_card_list.json")
     #sort list of cards downloading images from layouts that are acceptable
-
+    get_cardimages(card_img_folder,"bulk_card_list.json", filter_data)
     #crop out the set images
 
     #aply any filters and variations to the cards
 
 if __name__ == "__main__":
-    try:
-        main()
-    except:
-        print("process failed")
+    main()
+    

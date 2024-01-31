@@ -1,6 +1,7 @@
 #Project files
 bulk_card_list.json
 card_images/*
+set_symbols/*
 
 
 # Byte-compiled / optimized / DLL files

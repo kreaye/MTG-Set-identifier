@@ -2,7 +2,9 @@
 
 import json
 import requests
+from PIL import Image
 import os
+from tqdm import tqdm
 
 """
     Load data from a JSON file.
@@ -28,7 +30,6 @@ def load_data_from_json(file_path):
     - bool: True if the file exists, False otherwise.
 """ 
 def file_exists(file_path):
-
     return os.path.exists(file_path)
 
 """
@@ -65,13 +66,13 @@ def get_scryfall_bulkdata_url(url):
     Parameters:
     - output_folder (str): The name of the location where images are stored.
     - cardlist (str): name of json file containing the list of cards
-    -filter_data (dic): dic of layout types for filtering
+    - filter_data (dic): dic of layout types for filtering
 """
 def get_cardimages(output_folder, cardlist, filter_data):
 
     clist = load_data_from_json(cardlist) 
 
-    for card in clist:
+    for card in tqdm(clist, desc="Downloading Images"):
         if filter_data[card["layout"]]:
             file = output_folder + "(" + card["set_id"] + ")_"+card["id"] + ".jpg"
             if not file_exists(file):
@@ -110,11 +111,38 @@ def download_file(url, file_name):
     except requests.exceptions.RequestException as e:
         print(f"Error downloading file from {url}: {e}")
 
+"""
+    Take card images and remove everything other than set symbol area
+
+    Parameters:
+    - input_path(str): string containing the path to the card images.
+    - output_path (str): string containing the location to save cropped images.
+"""
+def crop_setsymbols(input_path, output_path):
+    
+    # Create the output directory if it doesn't exist
+    os.makedirs(output_path, exist_ok=True)
+    
+    # List all files in the input directory
+    file_list = os.listdir(input_path)
+    
+    crop_box = (350,325,488,450)  # (left, upper, right, lower)
+    for image_name in tqdm(file_list, desc="Cropping Set Symbols"):
+        image_path = os.path.join(input_path, image_name)
+        result_path = os.path.join(output_path,image_name)
+
+        if os.path.isfile(image_path) and image_name.lower().endswith('.jpg') and not file_exists(image_path):
+            image = Image.open(image_path)
+
+            result = image.crop(crop_box) #normal image size(488x680)
+
+            result.save(result_path)
 
 filter_file = "card_layout.json"
 scryfall_url = "https://api.scryfall.com/bulk-data"
 
 card_img_folder = "card_images/"
+set_symbol_folder = "set_symbols/"
 if not os.path.isdir(card_img_folder):
     os.makedirs(card_img_folder)
     
@@ -127,11 +155,17 @@ def main():
     #download current list of cards from scryfall
     bulkdata_uri = get_scryfall_bulkdata_url(scryfall_url)
     download_file(bulkdata_uri, "bulk_card_list.json")
+    
     #sort list of cards downloading images from layouts that are acceptable
+    print("checking cards for cards")
     get_cardimages(card_img_folder,"bulk_card_list.json", filter_data)
+    
     #crop out the set images
-
+    print("creating set symbols")
+    crop_setsymbols(card_img_folder, set_symbol_folder)
+    
     #aply any filters and variations to the cards
+
 
 if __name__ == "__main__":
     main()

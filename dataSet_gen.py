@@ -4,10 +4,6 @@ import json
 import requests
 import os
 
-# need to add check for if file alread exists
-# need to add checks and creating folder
-#
-
 """
     Load data from a JSON file.
 
@@ -21,6 +17,19 @@ def load_data_from_json(file_path):
     with open(file_path, 'r', encoding='utf-8') as file:
         data = json.load(file)
     return data
+
+"""
+    Check if a file exists.
+
+    Parameters:
+    - file_path (str): The path to the file.
+
+    Returns:
+    - bool: True if the file exists, False otherwise.
+""" 
+def file_exists(file_path):
+
+    return os.path.exists(file_path)
 
 """
     Gets the up to date url pointer for bulk card data
@@ -65,19 +74,18 @@ def get_cardimages(output_folder, cardlist, filter_data):
     for card in clist:
         if filter_data[card["layout"]]:
             file = output_folder + "(" + card["set_id"] + ")_"+card["id"] + ".jpg"
-            match(card["layout"]):
-                case "normal" | "adventure" | "leveler" | "prototype" | "mutate":
-                    download_file(card["image_uris"]["normal"], file)
-                case "modal_dfc":
-                    print(file)
-                    download_file(card["card_faces"][0]["image_uris"]["normal"], file)
-                    download_file(card["card_faces"][1]["image_uris"]["normal"], file)
-                case _:
-                    print("something went very wrong")
+            if not file_exists(file):
+                match(card["layout"]):
+                    case "normal" | "adventure" | "leveler" | "prototype" | "mutate":
+                        if (not (card["full_art"] and ("Basic Land" in card["type_line"]) )):
+                            download_file(card["image_uris"]["normal"], file)
+                    case "modal_dfc":
+                        download_file(card["card_faces"][0]["image_uris"]["normal"], file)
+                        download_file(card["card_faces"][1]["image_uris"]["normal"], file)
+                    case _:
+                        print("something went very wrong")
         else:
             None
-
-
 
 """
     Download a file from a URL and save it to the specified file name.
@@ -97,15 +105,19 @@ def download_file(url, file_name):
         with open(file_name, "wb") as file:
             file.write(response.content)
 
-        #print(f"Downloaded: {file_name}")
+        print(f"Downloaded: {file_name}")
 
     except requests.exceptions.RequestException as e:
         print(f"Error downloading file from {url}: {e}")
 
 
 filter_file = "card_layout.json"
-card_img_folder = "card_images/"
 scryfall_url = "https://api.scryfall.com/bulk-data"
+
+card_img_folder = "card_images/"
+if not os.path.isdir(card_img_folder):
+    os.makedirs(card_img_folder)
+    
 
 def main():
 

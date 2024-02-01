@@ -43,7 +43,7 @@ def file_exists(file_path):
 
 """
 def get_scryfall_bulkdata_url(url):
-    
+    print("tring to get uptodate card list")
     try:
         response = requests.get(url)
         response.raise_for_status()
@@ -106,7 +106,7 @@ def download_file(url, file_name):
         with open(file_name, "wb") as file:
             file.write(response.content)
 
-        print(f"Downloaded: {file_name}")
+        #print(f"Downloaded: {file_name}")
 
     except requests.exceptions.RequestException as e:
         print(f"Error downloading file from {url}: {e}")
@@ -126,7 +126,7 @@ def crop_setsymbols(input_path, output_path):
     # List all files in the input directory
     file_list = os.listdir(input_path)
     
-    crop_box = (350,325,488,450)  # (left, upper, right, lower)
+    crop_box = (350,325,475,450)  # (left, upper, right, lower)
     for image_name in tqdm(file_list, desc="Cropping Set Symbols"):
         image_path = os.path.join(input_path, image_name)
         result_path = os.path.join(output_path,image_name)
@@ -138,11 +138,27 @@ def crop_setsymbols(input_path, output_path):
 
             result.save(result_path)
 
+"""
+    Applies multiple different augments to image and saves them
+
+    Parameters:
+    - image_path (str): path to folder containing images
+    - dataset_path(str): path to where images need to be saved
+"""
+def image_augment(image_path,dataset_path ):
+    os.makedirs(dataset_path, exist_ok=True)
+
+    file_list = os.listdir(image_path)
+
+    for image in tqdm(file_list, desc="Creating Dataset"):
+        None
+
 filter_file = "card_layout.json"
 scryfall_url = "https://api.scryfall.com/bulk-data"
 
 card_img_folder = "card_images/"
 set_symbol_folder = "set_symbols/"
+dataset_folder = "symbol_data_set/"
 if not os.path.isdir(card_img_folder):
     os.makedirs(card_img_folder)
     
@@ -155,13 +171,13 @@ def main():
     #download current list of cards from scryfall
     bulkdata_uri = get_scryfall_bulkdata_url(scryfall_url)
     download_file(bulkdata_uri, "bulk_card_list.json")
-    
+
     #sort list of cards downloading images from layouts that are acceptable
-    print("checking cards for cards")
+    print("Checking for cards to download(this may take a while)")
     get_cardimages(card_img_folder,"bulk_card_list.json", filter_data)
     
     #crop out the set images
-    print("creating set symbols")
+    print("Creating set symbols(this may take a while)")
     crop_setsymbols(card_img_folder, set_symbol_folder)
     
     #aply any filters and variations to the cards

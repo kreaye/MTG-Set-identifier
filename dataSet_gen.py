@@ -131,7 +131,7 @@ def crop_setsymbols(input_path, output_path):
         image_path = os.path.join(input_path, image_name)
         result_path = os.path.join(output_path,image_name)
 
-        if os.path.isfile(image_path) and image_name.lower().endswith('.jpg') and not file_exists(image_path):
+        if os.path.isfile(image_path) and image_name.lower().endswith('.jpg') and not file_exists(result_path):
             image = Image.open(image_path)
 
             result = image.crop(crop_box) #normal image size(488x680)
@@ -181,7 +181,6 @@ def main():
     crop_setsymbols(card_img_folder, set_symbol_folder)
     
     #aply any filters and variations to the cards
-
 
 if __name__ == "__main__":
     main()

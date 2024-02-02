@@ -128,6 +128,7 @@ def crop_setsymbols(input_path, output_path):
     
     crop_box = (350,325,475,450)  # (left, upper, right, lower)
     for image_name in tqdm(file_list, desc="Cropping Set Symbols"):
+        
         image_path = os.path.join(input_path, image_name)
         result_path = os.path.join(output_path,image_name)
 
